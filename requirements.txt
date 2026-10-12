@@ -1,0 +1,7 @@
+amazon-braket-sdk
+numpy
+scipy
+matplotlib
+pyscf
+openfermion
+openfermionpyscf
