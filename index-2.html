@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quantum Computing in Biomedical Research</title>
+<style>
+:root {
+  --blue: #2997ff; --blue-d: #0071e3; --orange: #ff9f43;
+  --ease: cubic-bezier(.28, .11, .32, 1);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html { scroll-padding-top: calc(48px + env(safe-area-inset-top, 0px)); scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+*, *::before, *::after { box-sizing: inherit; }
+body { overflow-x: clip; margin: 0; background: #000; color: #f5f5f7; font-family: var(--font); font-size: 17px; line-height: 1.47; -webkit-font-smoothing: antialiased; }
+.dark  { --bg: #000; --fg: #f5f5f7; --mut: #86868b; --card: #1d1d1f; --line: #2d2d2f; --segtrack: rgba(120,120,128,.28); --segsel: #3a3a3c; --acc: var(--blue); }
+.light { --bg: #f5f5f7; --fg: #1d1d1f; --mut: #6e6e73; --card: #ffffff; --line: #d2d2d7; --segtrack: rgba(120,120,128,.16); --segsel: #ffffff; --acc: var(--blue-d); }
+section, footer { background: var(--bg); color: var(--fg); position: relative; }
+button, input, select { font: inherit; color: inherit; }
+a { color: var(--acc); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 22px; }
+.narrow { max-width: 860px; }
+.center { text-align: center; }
+.mega { font-size: clamp(2.5rem, 7.2vw, 6rem); line-height: 1.03; letter-spacing: -0.035em; font-weight: 700; margin: 0; }
+.h2 { font-size: clamp(2rem, 4.8vw, 3.5rem); line-height: 1.07; letter-spacing: -0.028em; font-weight: 700; margin: 0; }
+.sub { font-size: clamp(1.1rem, 2.1vw, 1.55rem); line-height: 1.3; letter-spacing: -0.01em; font-weight: 500; color: var(--mut); margin: 1.1rem 0 0; }
+.grad { background: linear-gradient(90deg, #2997ff, #7fd8ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.org { color: var(--orange); }
+.blue { color: var(--blue); }
+.pad { padding: clamp(80px, 13vw, 160px) 0; }
+
+/* reveal */
+.rv { opacity: 0; transform: translateY(44px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
+.rv.in { opacity: 1; transform: none; }
+.rv.d1 { transition-delay: .12s; } .rv.d2 { transition-delay: .24s; }
+
+/* nav */
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; padding-top: env(safe-area-inset-top, 0px); background: rgba(22,22,23,.72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+.nav-in { max-width: 1080px; margin: 0 auto; height: 48px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.logo { color: #f5f5f7; font-weight: 600; font-size: 14px; letter-spacing: -0.01em; white-space: nowrap; }
+.logo:hover { text-decoration: none; }
+.links { display: flex; gap: clamp(12px, 3vw, 30px); }
+.links a { color: #d2d2d7; font-size: 12px; letter-spacing: -0.005em; white-space: nowrap; }
+.links a:hover { color: #fff; text-decoration: none; }
+@media (max-width: 560px) { .logo { display: none; } .nav-in { justify-content: center; } }
+
+/* hero */
+.hero { min-height: max(100vh, 780px); min-height: max(100svh, 780px); overflow: hidden; display: flex; flex-direction: column; justify-content: flex-start; padding-top: calc(48px + 7vh); }
+.hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: pan-y; }
+.hero::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 100%, transparent 40%, #000 100%); pointer-events: none; }
+.hero-copy { position: relative; z-index: 2; text-align: center; padding: 0 22px; }
+.eyebrow { font-size: clamp(1rem, 1.8vw, 1.3rem); font-weight: 600; color: var(--mut); letter-spacing: -0.01em; margin: 0 0 14px; }
+.hero .mega { font-size: clamp(2.3rem, 6.1vw, 5.2rem); margin: 0 auto; }
+.hero .sub { max-width: 36ch; margin: 18px auto 0; }
+.cta-row { display: flex; gap: 22px; justify-content: center; align-items: center; margin-top: 30px; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px; border-radius: 980px; background: var(--blue-d); color: #fff !important; font-size: 17px; transition: background .3s; border: 0; cursor: pointer; }
+.pill:hover { background: #0077ed; text-decoration: none; }
+.pill.ghost { background: transparent; color: var(--fg) !important; box-shadow: inset 0 0 0 1px var(--line); }
+.textlink { font-size: 17px; color: var(--blue) !important; }
+.hint { position: absolute; z-index: 2; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 13px; color: var(--mut); margin: 0; }
+
+/* statement */
+.stmt { font-size: clamp(1.7rem, 4.4vw, 3.4rem); line-height: 1.16; letter-spacing: -0.03em; font-weight: 700; margin: 0; }
+.stmt .w { color: #3a3a3c; transition: color .45s var(--ease); }
+.stmt .w.on { color: #f5f5f7; }
+
+/* wall */
+.calc { background: var(--card); border-radius: 30px; padding: clamp(24px, 4.5vw, 52px); margin-top: 48px; box-shadow: 0 2px 30px rgba(0,0,0,.06); }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 12px; background: var(--segtrack); }
+.seg button { border: 0; background: transparent; padding: 7px 16px; min-height: 38px; border-radius: 9px; font-size: 14px; cursor: pointer; color: var(--fg); transition: background .25s, box-shadow .25s; }
+.seg button[aria-pressed="true"] { background: var(--segsel); box-shadow: 0 1px 4px rgba(0,0,0,.22); font-weight: 600; }
+.calc-out { display: grid; gap: 28px; grid-template-columns: 1fr; margin: 34px 0 26px; align-items: end; }
+@media (min-width: 820px) { .calc-out { grid-template-columns: auto 1fr; gap: 56px; } }
+.bign { font-size: clamp(4.5rem, 14vw, 9rem); font-weight: 700; letter-spacing: -0.05em; line-height: .9; font-variant-numeric: tabular-nums; }
+.bign small { display: block; font-size: 1.05rem; letter-spacing: 0; font-weight: 500; color: var(--mut); margin-top: 10px; }
+.cstats { display: grid; gap: 18px; grid-template-columns: 1fr; }
+@media (min-width: 560px) { .cstats { grid-template-columns: repeat(3, 1fr); } }
+.cstats .k, .sstat .k { display: block; font-size: 13px; color: var(--mut); }
+.cstats .v { display: block; font-size: clamp(1.3rem, 2.6vw, 1.9rem); font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; word-break: break-word; }
+.track { position: relative; height: 8px; border-radius: 4px; background: var(--line); margin: 44px 0 54px; }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: linear-gradient(90deg, var(--blue), #7fd8ff); transition: width .7s var(--ease); width: 5%; }
+.tick { font-style: normal; position: absolute; top: -6px; width: 1px; height: 20px; background: var(--mut); }
+.tick span { position: absolute; top: 26px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--mut); white-space: nowrap; }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 14px; color: var(--mut); display: flex; justify-content: space-between; }
+.field output { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 32px; background: transparent; margin: 0; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: var(--line); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: #fff; margin-top: -12px; box-shadow: 0 1px 6px rgba(0,0,0,.35), 0 0 0 .5px rgba(0,0,0,.18); }
+input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--line); }
+input[type=range]::-moz-range-thumb { width: 28px; height: 28px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.35); }
+.verdict { margin: 22px 0 0; font-size: 17px; font-weight: 500; max-width: 62ch; }
+details { margin-top: 22px; border-top: 1px solid var(--line); }
+summary { cursor: pointer; padding: 16px 0; font-size: 15px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; min-height: 44px; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; font-size: 22px; line-height: 1; color: var(--mut); transition: transform .3s var(--ease); }
+details[open] summary::after { transform: rotate(45deg); }
+details p, details li { font-size: 15px; color: var(--mut); max-width: 70ch; }
+.three { display: grid; gap: 40px; grid-template-columns: 1fr; margin-top: 90px; }
+@media (min-width: 820px) { .three { grid-template-columns: repeat(3, 1fr); gap: 36px; } }
+.three h3 { font-size: 1.6rem; letter-spacing: -0.02em; margin: 0 0 6px; padding-top: 18px; border-top: 4px solid var(--c); }
+.three p { color: var(--mut); margin: 0 0 10px; font-size: 16px; }
+.three b { color: var(--fg); font-weight: 600; }
+.note { color: var(--mut); font-size: 15px; max-width: 60ch; margin: 38px 0 0; }
+
+/* story */
+.story-head { padding: clamp(80px, 14vw, 170px) 0 clamp(30px, 6vw, 70px); }
+.story { height: 560vh; }
+.sticky { position: sticky; top: 0; height: 100vh; height: 100svh; padding-top: calc(48px + env(safe-area-inset-top, 0px)); display: grid; grid-template-columns: 1.15fr .85fr; overflow: hidden; }
+.stage { position: relative; min-height: 0; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rbig { position: absolute; left: clamp(18px, 4vw, 56px); top: clamp(10px, 4vh, 40px); font-size: clamp(3rem, 8vw, 6.5rem); font-weight: 700; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; }
+.rbig small { font-size: clamp(1rem, 2vw, 1.5rem); color: var(--mut); font-weight: 500; letter-spacing: 0; margin-left: 10px; }
+.side { display: flex; flex-direction: column; justify-content: center; gap: clamp(8px, 2vh, 22px); padding: 0 clamp(18px, 3vw, 44px) 0 0; min-height: 0; }
+.cap h3 { margin: 0 0 6px; font-size: clamp(1.7rem, 3.4vw, 2.6rem); letter-spacing: -0.03em; line-height: 1.05; }
+.cap p { margin: 0; color: var(--mut); font-size: clamp(.95rem, 1.5vw, 1.1rem); min-height: 4.6em; }
+.cap { transition: opacity .25s; }
+svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+.side svg.chart { max-height: 34vh; }
+svg.chart text { fill: var(--mut); font-family: var(--font); font-size: 11px; }
+svg.chart .grid { stroke: var(--line); stroke-width: 1; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--mut); margin-top: 8px; }
+.legend i { display: inline-block; width: 14px; height: 0; border-top: 3px solid; margin-right: 6px; vertical-align: middle; }
+.sstats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 20px; }
+.sstat .v { font-size: clamp(1.1rem, 2vw, 1.5rem); font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+@media (max-width: 860px) {
+  .sticky { grid-template-columns: 1fr; grid-template-rows: 38% 62%; }
+  .side { padding: 0 20px; justify-content: flex-start; gap: 6px; }
+  .rbig { font-size: 2.6rem; top: 8px; }
+  .cap p { min-height: 0; font-size: .92rem; }
+  .cap h3 { font-size: 1.5rem; }
+  svg.chart { max-height: 22vh; }
+  .sstat .k { font-size: 11px; }
+  .sstat .v { font-size: 1rem; }
+  .legend { display: none; }
+}
+
+/* lab */
+.lab-grid { display: grid; gap: 22px; grid-template-columns: 1fr; margin-top: 54px; }
+@media (min-width: 980px) { .lab-grid { grid-template-columns: 340px 1fr; align-items: start; } }
+.panel { background: var(--card); border-radius: 30px; padding: clamp(22px, 3.5vw, 36px); box-shadow: 0 2px 30px rgba(0,0,0,.06); }
+.panel.darkcard { background: #1d1d1f; color: #f5f5f7; --mut: #86868b; --line: #38383a; --fg: #f5f5f7; }
+.panel h3 { margin: 0 0 18px; font-size: 1.35rem; letter-spacing: -0.02em; }
+.panel .field { margin-bottom: 22px; }
+.rval { font-size: 3.4rem; font-weight: 700; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.rval small { font-size: 1.1rem; color: var(--mut); font-weight: 500; letter-spacing: 0; margin-left: 6px; }
+.btnrow { display: flex; gap: 10px; flex-wrap: wrap; }
+.bigstats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 26px; }
+@media (min-width: 700px) { .bigstats { grid-template-columns: repeat(4, 1fr); } }
+.bigstats .k { display: block; font-size: 13px; color: var(--mut); margin-bottom: 2px; }
+.bigstats .v { display: block; font-size: clamp(1.15rem, 2vw, 1.55rem); font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.bigstats .hl .v { color: var(--blue); }
+.small { font-size: 14px; color: var(--mut); }
+
+/* landscape */
+.pipe { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 44px; }
+@media (min-width: 820px) { .pipe { grid-template-columns: repeat(5, 1fr); } }
+.pipe button { text-align: left; padding: 16px 18px; min-height: 76px; border-radius: 18px; border: 0; background: #1d1d1f; cursor: pointer; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; transition: background .3s var(--ease), transform .3s var(--ease); }
+.pipe button small { display: block; font-weight: 400; font-size: 13px; color: var(--mut); margin-top: 3px; }
+.pipe button:hover { background: #2a2a2d; }
+.pipe button[aria-pressed="true"] { background: var(--blue-d); }
+.pipe button[aria-pressed="true"] small { color: rgba(255,255,255,.8); }
+.pipeout { margin-top: 14px; background: #1d1d1f; border-radius: 26px; padding: clamp(22px, 4vw, 40px); min-height: 190px; }
+.pipeout h3 { margin: 0 0 10px; font-size: 1.7rem; letter-spacing: -0.025em; }
+.pipeout p { color: #a1a1a6; max-width: 70ch; margin: 0 0 14px; }
+.meter { display: flex; align-items: center; gap: 4px; font-size: 14px; color: var(--mut); }
+.meter i { width: 26px; height: 6px; border-radius: 3px; background: #3a3a3c; }
+.meter i.on { background: var(--blue); }
+.meter span { margin-left: 10px; }
+.railhead { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-top: 110px; }
+.arrows { display: flex; gap: 8px; }
+.arrows button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: #1d1d1f; font-size: 20px; cursor: pointer; transition: background .25s; }
+.arrows button:hover { background: #2a2a2d; }
+.rail { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; --pl: max(22px, calc(50vw - 540px + 22px)); padding: 34px 22px 30px var(--pl); scroll-padding-left: var(--pl); margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.rail::-webkit-scrollbar { display: none; }
+.rail article { flex: 0 0 min(82vw, 360px); scroll-snap-align: start; background: #1d1d1f; border-radius: 28px; padding: 30px; min-height: 430px; display: flex; flex-direction: column; }
+.rail h3 { font-size: 1.7rem; letter-spacing: -0.03em; line-height: 1.1; margin: 0 0 16px; }
+.rail p { color: #a1a1a6; font-size: 15px; margin: 0 0 12px; }
+.rail .meter { margin-top: auto; padding-top: 18px; }
+.cmp { margin-top: 110px; }
+.cmp .seg { margin-top: 26px; }
+.cmprows { margin-top: 26px; border-top: 1px solid #2d2d2f; }
+.cmprow { display: grid; grid-template-columns: 1fr; gap: 4px; padding: 20px 0; border-bottom: 1px solid #2d2d2f; }
+@media (min-width: 760px) { .cmprow { grid-template-columns: 220px 1fr; gap: 30px; } }
+.cmprow b { color: #86868b; font-weight: 500; font-size: 15px; }
+.cmprow span { font-size: clamp(1.1rem, 2vw, 1.45rem); letter-spacing: -0.015em; font-weight: 500; transition: opacity .3s var(--ease); }
+.cmptext { font-size: clamp(1.3rem, 2.6vw, 2rem); letter-spacing: -0.02em; line-height: 1.25; font-weight: 600; max-width: 30ch; margin: 30px 0 0; }
+.cmptext em { font-style: normal; color: var(--mut); }
+
+/* limits */
+.lims { display: grid; gap: 0; margin-top: 54px; }
+.lim { padding: 30px 0; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+@media (min-width: 820px) { .lim { grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; } .lim p { padding-top: .7rem; } }
+.lim h3 { margin: 0; font-size: clamp(1.8rem, 4.4vw, 3rem); letter-spacing: -0.035em; line-height: 1.05; }
+.lim p { margin: 0; color: var(--mut); font-size: clamp(1rem, 1.6vw, 1.2rem); max-width: 46ch; }
+
+footer { padding: 44px 0 60px; font-size: 12px; color: var(--mut); border-top: 1px solid var(--line); }
+footer p { margin: 0 0 10px; max-width: 85ch; }
+footer b { color: var(--fg); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rv { opacity: 1; transform: none; transition: none; }
+  * { transition-duration: .01s !important; }
+}
+</style>
+</head>
+<body>
+
+<nav aria-label="Main">
+  <div class="nav-in">
+    <a class="logo" href="#top">Quantum × Biomedicine</a>
+    <div class="links"><a href="#wall">The wall</a><a href="#story">Bond story</a><a href="#lab">Lab</a><a href="#landscape">Landscape</a></div>
+  </div>
+</nav>
+
+<main id="top">
+
+<!-- HERO -->
+<section class="dark hero" id="hero">
+  <canvas id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="hero-copy">
+    <p class="eyebrow">Quantum computing in biomedical research</p>
+    <h1 class="mega">Medicine is chemistry.<br>Chemistry is <span class="grad">quantum.</span></h1>
+    <p class="sub">What quantum computers could do for drug discovery, and one real experiment you can run yourself.</p>
+    <div class="cta-row"><a class="pill" href="#lab">Run the experiment</a><a class="textlink" href="#story">Watch a bond break &rsaquo;</a></div>
+  </div>
+  <p class="hint" id="heroHint">Move across the screen to stretch the bond</p>
+</section>
+
+<!-- STATEMENT -->
+<section class="dark pad" id="statement">
+  <div class="wrap narrow">
+    <p class="stmt" id="stmt">A drug is a molecule. A molecule is a few electrons obeying quantum mechanics. Predicting them exactly is so hard that today we mostly guess, test, and start over.</p>
+  </div>
+</section>
+
+<!-- THE WALL -->
+<section class="light pad" id="wall">
+  <div class="wrap">
+    <h2 class="h2 rv" style="max-width:16ch">Every electron doubles the problem.</h2>
+    <p class="sub rv d1" style="max-width:36ch">To hold a molecule's exact quantum state, a classical computer needs memory that doubles with every added qubit. Pick a molecule.</p>
+
+    <div class="calc rv">
+      <div class="seg" id="presets" role="group" aria-label="Molecule presets"></div>
+      <div class="calc-out" aria-live="polite">
+        <div class="bign"><span id="cQ">4</span><small>qubits needed</small></div>
+        <div class="cstats">
+          <div><span class="k">Possible states</span><span class="v" id="cD">16</span></div>
+          <div><span class="k">Memory to store exactly</span><span class="v" id="cM">256 B</span></div>
+          <div><span class="k">In 16 GB laptops</span><span class="v" id="cL">less than one</span></div>
+        </div>
+      </div>
+      <div class="track" aria-hidden="true">
+        <div class="fill" id="cFill"></div>
+        <i class="tick" style="left:37.5%"><span>30 · a laptop</span></i>
+        <i class="tick" style="left:62.5%"><span>50 · top supercomputers</span></i>
+      </div>
+      <div class="field">
+        <label for="orb">Or set it yourself, spatial orbitals <output id="orbOut">2</output></label>
+        <input type="range" id="orb" min="1" max="100" value="2">
+      </div>
+      <p class="verdict" id="cV"></p>
+      <details>
+        <summary>What this does and does not show</summary>
+        <p>Memory is 16 bytes per amplitude (complex double precision) times 2ⁿ. It is the worst case for exact simulation. Real chemistry software uses approximations such as density functional theory and coupled cluster, which do not store this state, but those approximations lose accuracy exactly where quantum effects are strong.</p>
+        <p>Qubit counts use the minimal STO-3G basis and the plain Jordan Wigner mapping, with no reductions. Real studies pick a smaller active space. Current quantum devices have on the order of a hundred to a thousand noisy qubits, and noise rather than qubit count is the main obstacle.</p>
+      </details>
+    </div>
+
+    <div class="three">
+      <article class="rv" style="--c:var(--orange)"><h3>Classical simulation</h3><p>Solves the physics equations on ordinary computers.</p><p><b>Strong at</b> small molecules, where it is exact and trusted.</p><p><b>Struggles with</b> large ones. Cost explodes, so approximations take over.</p></article>
+      <article class="rv d1" style="--c:#86868b"><h3>Machine learning</h3><p>Learns patterns from data. Transformer models such as AlphaFold predict protein structures.</p><p><b>Strong at</b> speed. It already works at scale.</p><p><b>Struggles with</b> problems with little data. It predicts, it does not compute the physics.</p></article>
+      <article class="rv d2" style="--c:var(--blue-d)"><h3>Quantum simulation</h3><p>Stores a molecule's quantum state directly in qubits.</p><p><b>Strong at</b> scaling with the physics, with no training data.</p><p><b>Struggles with</b> today's hardware, which is small and noisy.</p></article>
+    </div>
+    <p class="note rv">These are teammates, not rivals. The method in this project, VQE, is itself a pair: a quantum circuit proposes a state and a classical optimizer improves it. A quantum computer does not try every answer at once. It arranges the problem so the physics does part of the work.</p>
+  </div>
+</section>
+
+<!-- STORY INTRO -->
+<section class="dark story-head">
+  <div class="wrap narrow center">
+    <h2 class="mega rv">Watch a bond break.</h2>
+    <p class="sub rv d1">Two hydrogen atoms. Scroll to pull them apart. Every number is computed.</p>
+  </div>
+</section>
+
+<!-- STORY (pinned, scroll driven) -->
+<section class="dark story" id="story" aria-label="Scroll driven H2 bond animation">
+  <div class="sticky">
+    <div class="stage">
+      <canvas id="storyCanvas" aria-hidden="true"></canvas>
+      <div class="rbig"><span id="sR">0.30</span><small>Å apart</small></div>
+    </div>
+    <div class="side">
+      <div class="cap" id="cap"><h3 id="capT">Squeezed</h3><p id="capP"></p></div>
+      <svg class="chart" id="storyChart" viewBox="0 0 520 300" role="img" aria-label="H2 energy against bond length, with exact, Hartree Fock and VQE points"></svg>
+      <div class="legend"><span><i style="border-color:#fff"></i>Exact</span><span><i style="border-color:var(--orange);border-top-style:dashed"></i>Hartree Fock, a simple classical method</span><span><i style="border-color:var(--blue)"></i>VQE runs</span></div>
+      <div class="sstats">
+        <div class="sstat"><span class="k">Exact energy</span><span class="v" id="ssE">–</span></div>
+        <div class="sstat"><span class="k">Hartree Fock misses</span><span class="v org" id="ssM">–</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LAB -->
+<section class="light pad" id="lab">
+  <div class="wrap">
+    <h2 class="h2 rv" style="max-width:14ch">Now run it yourself.</h2>
+    <p class="sub rv d1" style="max-width:40ch">Pick a distance, press run, and watch a quantum circuit search for the molecule's lowest energy. It runs right here in your browser.</p>
+
+    <div class="lab-grid">
+      <div class="panel rv">
+        <h3>Your experiment</h3>
+        <div class="field">
+          <label for="labR">H to H distance</label>
+          <div class="rval"><span id="labROut">0.75</span><small>Å</small></div>
+          <input type="range" id="labR" min="0.30" max="2.50" step="0.05" value="0.75" aria-label="H to H distance in angstroms">
+        </div>
+        <div class="field">
+          <label>Measurement</label>
+          <div class="seg" id="shotSeg" role="group" aria-label="Measurement shots">
+            <button type="button" data-shots="0" aria-pressed="true">Ideal</button>
+            <button type="button" data-shots="2000" aria-pressed="false">2000 shots</button>
+            <button type="button" data-shots="500" aria-pressed="false">500 shots</button>
+          </div>
+          <span class="small">Shots are repeated measurements. Fewer shots means noisier energy, like real hardware.</span>
+        </div>
+        <div class="btnrow"><button class="pill" id="run" type="button">Run VQE</button><button class="pill ghost" id="reseed" type="button">New random start</button></div>
+        <details>
+          <summary>What is H₂, and why start here?</summary>
+          <p>H₂ has two electrons and is the simplest molecule that shows real quantum chemistry. It fits on two qubits and a classical computer can solve it exactly, so every VQE answer can be checked. That is why it is the standard test case in the VQE literature.</p>
+          <p>It is a benchmark for the method, not a drug. The biomedical link is that larger molecules need the same calculation.</p>
+        </details>
+      </div>
+
+      <div>
+        <div class="panel darkcard rv d1">
+          <h3>The circuit searching for the answer</h3>
+          <svg class="chart" id="convChart" viewBox="0 0 640 270" role="img" aria-label="Energy against optimizer iteration for the current VQE run"></svg>
+          <div class="legend"><span><i style="border-color:var(--blue)"></i>VQE energy each iteration</span><span><i style="border-color:#fff;border-top-style:dashed"></i>Exact answer</span><span><i style="border-color:var(--orange);border-top-style:dotted"></i>Hartree Fock</span></div>
+          <div class="bigstats" aria-live="polite">
+            <div><span class="k">Exact (classical)</span><span class="v" id="sExact">–</span></div>
+            <div><span class="k">Hartree Fock</span><span class="v org" id="sHF">–</span></div>
+            <div class="hl"><span class="k">VQE result</span><span class="v" id="sVQE">–</span></div>
+            <div><span class="k">Error vs exact</span><span class="v" id="sErr">–</span></div>
+          </div>
+          <p class="small" id="sNote" style="margin:18px 0 0;max-width:70ch"></p>
+        </div>
+        <p class="verdict rv" id="sVerdict"></p>
+        <details class="rv">
+          <summary>How these numbers were made</summary>
+          <ol>
+            <li>PySCF computes the electron integrals for H₂ (STO-3G basis) at each distance, plus the exact full CI energy as a reference.</li>
+            <li>OpenFermion turns them into a qubit Hamiltonian and reduces it from 4 qubits to 2 using symmetries. The constant term includes nuclear repulsion, so energies are totals in Hartree. The lowest eigenvalue matches the PySCF reference at all 45 distances.</li>
+            <li>A 4 parameter circuit (RY, RY, CNOT, RY, RY) was optimized with COBYLA on the Amazon Braket local simulator, starting near the Hartree Fock state. The worst error across 45 distances was <span id="pWorst">–</span> Ha.</li>
+            <li>The lab above runs the same circuit in your browser with a 2 qubit simulator and gradient descent (Adam with the parameter shift rule). It was checked against the Braket results at every distance.</li>
+          </ol>
+          <p>All runs are simulations. None ran on quantum hardware.</p>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LANDSCAPE -->
+<section class="dark pad" id="landscape">
+  <div class="wrap">
+    <h2 class="h2 rv" style="max-width:18ch">Where it could help, and where it cannot.</h2>
+    <p class="sub rv d1" style="max-width:42ch">Developing a drug often takes a decade or more, and much of that is clinical testing on people. Quantum computing is aimed at the early stages. Tap a stage.</p>
+    <div class="pipe rv" id="pipe" role="group" aria-label="Drug development stages"></div>
+    <div class="pipeout" id="pipeOut" aria-live="polite"></div>
+
+    <div class="railhead">
+      <h2 class="h2 rv" style="max-width:14ch">Five areas. Five maturity levels.</h2>
+      <div class="arrows"><button type="button" id="prev" aria-label="Previous">&lsaquo;</button><button type="button" id="next" aria-label="Next">&rsaquo;</button></div>
+    </div>
+    <div class="rail" id="rail" tabindex="0" aria-label="Application areas"></div>
+
+    <div class="cmp">
+      <h2 class="h2 rv" style="max-width:18ch">Transformers and quantum computers.</h2>
+      <p class="sub rv d1" style="max-width:44ch">The 2017 paper <i>Attention Is All You Need</i> introduced the transformer behind modern language models and AlphaFold 2. It is a different kind of thing from a quantum computer, so this is about roles, not a winner.</p>
+      <div class="seg" id="cmpSeg" role="group" aria-label="Compare"></div>
+      <div id="cmpBody"></div>
+    </div>
+  </div>
+</section>
+
+<!-- LIMITS -->
+<section class="light pad" id="limits">
+  <div class="wrap">
+    <h2 class="h2 rv">The honest part.</h2>
+    <div class="lims">
+      <div class="lim rv"><h3>Few, noisy qubits.</h3><p>Demonstrations stay near two to a few dozen qubits, far from drug sized molecules or whole proteins.</p></div>
+      <div class="lim rv"><h3>Short circuits only.</h3><p>Gate errors and decoherence limit how deep a circuit can run before results fall apart.</p></div>
+      <div class="lim rv"><h3>No error correction yet.</h3><p>Fault tolerant machines that could run longer algorithms are still in development.</p></div>
+      <div class="lim rv"><h3>No proven advantage.</h3><p>Review papers broadly agree that a clear quantum advantage on a practical biomedical task has not been shown.</p></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="light">
+  <div class="wrap">
+    <p><b>Harshita</b> · B.Tech Biotechnology (AI/ML and Data Science), Amity University, Noida</p>
+    <p>Foundations behind this page: Feynman (1982), Peruzzo et al. (2014), O'Malley et al. (2016), Preskill (2018), Vaswani et al. (2017). The H₂ results are original simulations using PySCF, OpenFermion and Amazon Braket.</p>
+    <p>Code and notebook: <a href="https://github.com/Hershey-tech/quantum-vqe-h2">github.com/Hershey-tech/quantum-vqe-h2</a></p>
+  </div>
+</footer>
+
+<script>
+const DATA = [{"r":0.3,"terms":{"II":1.010182084,"ZI":0.80864891,"IZ":0.80864891,"ZZ":0.013287977,"XX":0.160818519},"fci":-0.601803711,"hf":-0.593827759,"hf_basis_index":3,"braket":-0.601803711},{"r":0.35,"terms":{"II":0.701273108,"ZI":0.747415823,"IZ":0.747415823,"ZZ":0.013103636,"XX":0.162573225},"fci":-0.789269392,"hf":-0.780454902,"hf_basis_index":3,"braket":-0.789269393},{"r":0.4,"terms":{"II":0.460363496,"ZI":0.68881943,"IZ":0.68881943,"ZZ":0.012913969,"XX":0.164515424},"fci":-0.914149705,"hf":-0.904361394,"hf_basis_index":3,"braket":-0.914149705},{"r":0.45,"terms":{"II":0.267547225,"ZI":0.633889783,"IZ":0.633889783,"ZZ":0.012719203,"XX":0.166621401},"fci":-0.998415596,"hf":-0.987513138,"hf_basis_index":3,"braket":-0.998415596},{"r":0.5,"terms":{"II":0.110646545,"ZI":0.583079626,"IZ":0.583079626,"ZZ":0.012516432,"XX":0.168870228},"fci":-1.055159794,"hf":-1.042996275,"hf_basis_index":3,"braket":-1.055159794},{"r":0.55,"terms":{"II":-0.018373521,"ZI":0.536488785,"IZ":0.536488785,"ZZ":0.012300354,"XX":0.171244517},"fci":-1.092629907,"hf":-1.079050736,"hf_basis_index":3,"braket":-1.092629907},{"r":0.6,"terms":{"II":-0.125165059,"ZI":0.494013787,"IZ":0.494013787,"ZZ":0.01206439,"XX":0.173730644},"fci":-1.116286007,"hf":-1.101128242,"hf_basis_index":3,"braket":-1.116286007},{"r":0.65,"terms":{"II":-0.213931627,"ZI":0.45543342,"IZ":0.45543342,"ZZ":0.011801922,"XX":0.176318452},"fci":-1.129904784,"hf":-1.112996546,"hf_basis_index":3,"braket":-1.129904784},{"r":0.7,"terms":{"II":-0.287945078,"ZI":0.42045568,"IZ":0.42045568,"ZZ":0.011507402,"XX":0.179000576},"fci":-1.136189454,"hf":-1.117349035,"hf_basis_index":3,"braket":-1.136189454},{"r":0.75,"terms":{"II":-0.349833418,"ZI":0.388747588,"IZ":0.388747588,"ZZ":0.011177145,"XX":0.181771537},"fci":-1.137117067,"hf":-1.116151449,"hf_basis_index":3,"braket":-1.137117067},{"r":0.8,"terms":{"II":-0.401741283,"ZI":0.359959425,"IZ":0.359959425,"ZZ":0.010809735,"XX":0.184626784},"fci":-1.134147667,"hf":-1.110850397,"hf_basis_index":3,"braket":-1.134147667},{"r":0.85,"terms":{"II":-0.445423632,"ZI":0.333746495,"IZ":0.333746495,"ZZ":0.010406068,"XX":0.187561848},"fci":-1.128361878,"hf":-1.102510554,"hf_basis_index":3,"braket":-1.128361878},{"r":0.9,"terms":{"II":-0.48230859,"ZI":0.30978728,"IZ":0.30978728,"ZZ":0.009969108,"XX":0.190571694},"fci":-1.120560281,"hf":-1.091914041,"hf_basis_index":3,"braket":-1.120560281},{"r":0.95,"terms":{"II":-0.513548419,"ZI":0.28779599,"IZ":0.28779599,"ZZ":0.00950347,"XX":0.193650317},"fci":-1.111339418,"hf":-1.079636928,"hf_basis_index":3,"braket":-1.111339418},{"r":1.0,"terms":{"II":-0.540066279,"ZI":0.26752865,"IZ":0.26752865,"ZZ":0.00901493,"XX":0.196790584},"fci":-1.10115033,"hf":-1.066108649,"hf_basis_index":3,"braket":-1.10115033},{"r":1.05,"terms":{"II":-0.562600113,"ZI":0.24878329,"IZ":0.24878329,"ZZ":0.008509937,"XX":0.199984267},"fci":-1.090342177,"hf":-1.051656756,"hf_basis_index":3,"braket":-1.090342177},{"r":1.1,"terms":{"II":-0.581742296,"ZI":0.231395877,"IZ":0.231395877,"ZZ":0.007995175,"XX":0.203222227},"fci":-1.079192945,"hf":-1.036538875,"hf_basis_index":3,"braket":-1.079192945},{"r":1.15,"terms":{"II":-0.597973471,"ZI":0.215233937,"IZ":0.215233937,"ZZ":0.007477201,"XX":0.206494675},"fci":-1.067929659,"hf":-1.020964144,"hf_basis_index":3,"braket":-1.067929659},{"r":1.2,"terms":{"II":-0.611689715,"ZI":0.200189577,"IZ":0.200189577,"ZZ":0.006962162,"XX":0.209791469},"fci":-1.056740746,"hf":-1.005106707,"hf_basis_index":3,"braket":-1.056740746},{"r":1.25,"terms":{"II":-0.623223201,"ZI":0.186173103,"IZ":0.186173103,"ZZ":0.006455593,"XX":0.213102401},"fci":-1.045783145,"hf":-0.989113814,"hf_basis_index":3,"braket":-1.045783145},{"r":1.3,"terms":{"II":-0.632857195,"ZI":0.173107853,"IZ":0.173107853,"ZZ":0.005962286,"XX":0.21641746},"fci":-1.035186266,"hf":-0.973110616,"hf_basis_index":3,"braket":-1.035186267},{"r":1.35,"terms":{"II":-0.640836612,"ZI":0.16092639,"IZ":0.16092639,"ZZ":0.005486217,"XX":0.219727036},"fci":-1.025054362,"hf":-0.957203175,"hf_basis_index":3,"braket":-1.025054362},{"r":1.4,"terms":{"II":-0.647375313,"ZI":0.149567939,"IZ":0.149567939,"ZZ":0.005030536,"XX":0.223022089},"fci":-1.015468249,"hf":-0.941480655,"hf_basis_index":3,"braket":-1.015468249},{"r":1.45,"terms":{"II":-0.652661203,"ZI":0.138976779,"IZ":0.138976779,"ZZ":0.004597586,"XX":0.226294259},"fci":-1.006486932,"hf":-0.926017176,"hf_basis_index":3,"braket":-1.006486932},{"r":1.5,"terms":{"II":-0.656859887,"ZI":0.129101313,"IZ":0.129101313,"ZZ":0.004188958,"XX":0.229535936},"fci":-0.998149353,"hf":-0.910873555,"hf_basis_index":3,"braket":-0.998149353},{"r":1.55,"terms":{"II":-0.660117461,"ZI":0.119893537,"IZ":0.119893537,"ZZ":0.003805578,"XX":0.232740292},"fci":-0.990476341,"hf":-0.896098958,"hf_basis_index":3,"braket":-0.990476341},{"r":1.6,"terms":{"II":-0.662562745,"ZI":0.111308747,"IZ":0.111308747,"ZZ":0.003447789,"XX":0.235901285},"fci":-0.983472729,"hf":-0.88173245,"hf_basis_index":3,"braket":-0.983472729},{"r":1.65,"terms":{"II":-0.664309184,"ZI":0.10330533,"IZ":0.10330533,"ZZ":0.003115459,"XX":0.239013646},"fci":-0.977129616,"hf":-0.867804384,"hf_basis_index":3,"braket":-0.977129616},{"r":1.7,"terms":{"II":-0.665456524,"ZI":0.095844587,"IZ":0.095844587,"ZZ":0.002808071,"XX":0.242072838},"fci":-0.971426688,"hf":-0.854337627,"hf_basis_index":3,"braket":-0.971426688},{"r":1.75,"terms":{"II":-0.66609231,"ZI":0.088890552,"IZ":0.088890552,"ZZ":0.002524815,"XX":0.24507502},"fci":-0.966334545,"hf":-0.841348598,"hf_basis_index":3,"braket":-0.966334545},{"r":1.8,"terms":{"II":-0.666293239,"ZI":0.082409792,"IZ":0.082409792,"ZZ":0.002264674,"XX":0.248016994},"fci":-0.961816953,"hf":-0.828848148,"hf_basis_index":3,"braket":-0.961816953},{"r":1.85,"terms":{"II":-0.666126382,"ZI":0.0763712,"IZ":0.0763712,"ZZ":0.002026489,"XX":0.250896151},"fci":-0.957832968,"hf":-0.816842292,"hf_basis_index":3,"braket":-0.957832948},{"r":1.9,"terms":{"II":-0.665650287,"ZI":0.070745789,"IZ":0.070745789,"ZZ":0.001809019,"XX":0.253710428},"fci":-0.954338854,"hf":-0.805332845,"hf_basis_index":3,"braket":-0.95433885},{"r":1.95,"terms":{"II":-0.664915958,"ZI":0.065506496,"IZ":0.065506496,"ZZ":0.001610984,"XX":0.256458247},"fci":-0.951289759,"hf":-0.794317966,"hf_basis_index":3,"braket":-0.951289758},{"r":2.0,"terms":{"II":-0.66396774,"ZI":0.060628009,"IZ":0.060628009,"ZZ":0.001431104,"XX":0.259138475},"fci":-0.948641112,"hf":-0.783792654,"hf_basis_index":3,"braket":-0.948641111},{"r":2.05,"terms":{"II":-0.6628441,"ZI":0.056086613,"IZ":0.056086613,"ZZ":0.001268118,"XX":0.261750375},"fci":-0.946349737,"hf":-0.773749208,"hf_basis_index":3,"braket":-0.946349525},{"r":2.1,"terms":{"II":-0.661578322,"ZI":0.051860066,"IZ":0.051860066,"ZZ":0.001120804,"XX":0.264293566},"fci":-0.944374681,"hf":-0.764177652,"hf_basis_index":3,"braket":-0.944374681},{"r":2.15,"terms":{"II":-0.660199127,"ZI":0.047927501,"IZ":0.047927501,"ZZ":0.000987989,"XX":0.266767986},"fci":-0.942677786,"hf":-0.755066141,"hf_basis_index":3,"braket":-0.942673578},{"r":2.2,"terms":{"II":-0.658731224,"ZI":0.04426934,"IZ":0.04426934,"ZZ":0.000868555,"XX":0.269173856},"fci":-0.941224034,"hf":-0.74640135,"hf_basis_index":3,"braket":-0.941214787},{"r":2.25,"terms":{"II":-0.657195798,"ZI":0.040867235,"IZ":0.040867235,"ZZ":0.00076144,"XX":0.271511647},"fci":-0.939981705,"hf":-0.738168827,"hf_basis_index":3,"braket":-0.939981052},{"r":2.3,"terms":{"II":-0.655610945,"ZI":0.037704008,"IZ":0.037704008,"ZZ":0.000665639,"XX":0.273782054},"fci":-0.938922386,"hf":-0.730353321,"hf_basis_index":3,"braket":-0.938920414},{"r":2.35,"terms":{"II":-0.653992062,"ZI":0.034763607,"IZ":0.034763607,"ZZ":0.000580205,"XX":0.275985966},"fci":-0.938020865,"hf":-0.722939072,"hf_basis_index":3,"braket":-0.938020624},{"r":2.4,"terms":{"II":-0.652352187,"ZI":0.032031058,"IZ":0.032031058,"ZZ":0.000504242,"XX":0.278124443},"fci":-0.937254953,"hf":-0.71591006,"hf_basis_index":3,"braket":-0.937254952},{"r":2.45,"terms":{"II":-0.650702305,"ZI":0.029492412,"IZ":0.029492412,"ZZ":0.000436911,"XX":0.280198692},"fci":-0.936605256,"hf":-0.709250219,"hf_basis_index":3,"braket":-0.936603987},{"r":2.5,"terms":{"II":-0.649051621,"ZI":0.027134699,"IZ":0.027134699,"ZZ":0.00037742,"XX":0.282210046},"fci":-0.93605492,"hf":-0.7029436,"hf_basis_index":3,"braket":-0.936051634}];
+// 2 qubit statevector VQE engine. Index convention matches Braket: idx = 2*q0 + q1.
+const HF_ANGLES = { 0: [0, 0], 1: [0, Math.PI], 2: [Math.PI, Math.PI], 3: [Math.PI, 0] };
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gauss(rng) {
+  let u = 0, v = 0;
+  while (u === 0) u = rng();
+  v = rng();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+// ansatz: RY(t0) q0, RY(t1) q1, CNOT(0,1), RY(t2) q0, RY(t3) q1  applied to |00>
+function state(p) {
+  let s = [1, 0, 0, 0];
+  const ry0 = (t) => { const c = Math.cos(t / 2), n = Math.sin(t / 2);
+    const [a0, a1, a2, a3] = s; s = [c * a0 - n * a2, c * a1 - n * a3, n * a0 + c * a2, n * a1 + c * a3]; };
+  const ry1 = (t) => { const c = Math.cos(t / 2), n = Math.sin(t / 2);
+    const [a0, a1, a2, a3] = s; s = [c * a0 - n * a1, n * a0 + c * a1, c * a2 - n * a3, n * a2 + c * a3]; };
+  ry0(p[0]); ry1(p[1]);
+  s = [s[0], s[1], s[3], s[2]];          // CNOT control q0, target q1
+  ry0(p[2]); ry1(p[3]);
+  return s;
+}
+
+// exact expectation of each Pauli term for a real state
+function termExpectations(s) {
+  const pr = s.map((x) => x * x);
+  return {
+    II: 1,
+    ZI: pr[0] + pr[1] - pr[2] - pr[3],
+    IZ: pr[0] - pr[1] + pr[2] - pr[3],
+    ZZ: pr[0] - pr[1] - pr[2] + pr[3],
+    XX: 2 * (s[0] * s[3] + s[1] * s[2]),
+  };
+}
+
+function sampleMean(e, shots, rng) {          // estimate of a +-1 observable from `shots` measurements
+  const pPlus = Math.min(1, Math.max(0, (1 + e) / 2));
+  let plus = 0;
+  for (let i = 0; i < shots; i++) if (rng() < pPlus) plus++;
+  return (2 * plus) / shots - 1;
+}
+
+function energy(p, terms, shots, rng) {
+  const ex = termExpectations(state(p));
+  let e = 0;
+  for (const k in terms) {
+    if (k === "II") { e += terms[k]; continue; }
+    e += terms[k] * (shots > 0 ? sampleMean(ex[k], shots, rng) : ex[k]);
+  }
+  return e;
+}
+
+function trueEnergy(p, terms) { return energy(p, terms, 0, null); }
+
+// run VQE: Adam optimizer with parameter shift gradients. Calls onStep(iter, energy) if given.
+function runVQE(row, opts) {
+  const { shots = 0, iters = 100, lr = 0.3, seed = 1, onStep } = opts || {};
+  const rng = mulberry32(seed);
+  const [a0, a1] = HF_ANGLES[row.hf_basis_index];
+  let p = [a0 + 0.1 * gauss(rng), a1 + 0.1 * gauss(rng), 0.1 * gauss(rng), 0.1 * gauss(rng)];
+  const m = [0, 0, 0, 0], v = [0, 0, 0, 0];
+  const b1 = 0.9, b2 = 0.999, eps = 1e-8;
+  const trace = [];
+  for (let t = 1; t <= iters; t++) {
+    const e = energy(p, row.terms, shots, rng);
+    trace.push(e);
+    if (onStep) onStep(t, e, p);
+    const g = p.map((_, i) => {
+      const pp = p.slice(), pm = p.slice();
+      pp[i] += Math.PI / 2; pm[i] -= Math.PI / 2;
+      return (energy(pp, row.terms, shots, rng) - energy(pm, row.terms, shots, rng)) / 2;
+    });
+    for (let i = 0; i < 4; i++) {
+      m[i] = b1 * m[i] + (1 - b1) * g[i];
+      v[i] = b2 * v[i] + (1 - b2) * g[i] * g[i];
+      const mh = m[i] / (1 - Math.pow(b1, t)), vh = v[i] / (1 - Math.pow(b2, t));
+      p[i] -= (lr * mh) / (Math.sqrt(vh) + eps);
+    }
+  }
+  const finalMeasured = energy(p, row.terms, shots, rng);
+  trace.push(finalMeasured);
+  return { params: p, trace, measured: finalMeasured, trueE: trueEnergy(p, row.terms) };
+}
+
+if (typeof module !== "undefined") module.exports = { runVQE, state, termExpectations, trueEnergy, mulberry32 };
+
+
+/* ================= helpers ================= */
+const $ = (s, r) => (r || document).querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; }
+const fmt = v => (v < 0 ? "−" : "") + Math.abs(v).toFixed(6);
+const fmt4 = v => (v < 0 ? "−" : "") + Math.abs(v).toFixed(4);
+const sup = n => String(n).replace(/-/g, "⁻").replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]);
+const sci = v => { if (v === 0) return "0"; const e = Math.floor(Math.log10(Math.abs(v))); return (v / Math.pow(10, e)).toFixed(1) + " × 10" + sup(e); };
+
+/* ================= reveal on scroll ================= */
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+document.querySelectorAll(".rv").forEach(n => io.observe(n));
+
+/* ================= molecule renderer (electron cloud) ================= */
+class Molecule {
+  constructor(canvas, n) {
+    this.c = canvas; this.ctx = canvas.getContext("2d"); this.n = n;
+    this.px = new Float32Array(n); this.py = new Float32Array(n);
+    this.xi = new Float32Array(n); this.ang = new Float32Array(n); this.rad = new Float32Array(n);
+    this.spd = new Float32Array(n); this.sz = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      this.xi[i] = Math.random(); this.ang[i] = Math.random() * 6.2832;
+      this.rad[i] = (-Math.log(Math.random() + 1e-9) - Math.log(Math.random() + 1e-9) - Math.log(Math.random() + 1e-9)) * 0.105;
+      this.spd[i] = (Math.random() - 0.5) * 1.6; this.sz[i] = (1.2 + Math.random() * 1.4) * (window.innerWidth < 700 ? 0.7 : 1);
+      this.px[i] = NaN;
+    }
+    this.w = 300; this.h = 300; this.resize();
+  }
+  resize() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1), r = this.c.getBoundingClientRect();
+    this.w = Math.max(10, r.width); this.h = Math.max(10, r.height);
+    this.c.width = this.w * dpr; this.c.height = this.h * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  draw(R, time, o) {
+    const { ctx, w, h, n } = this, a = o.scale(w, h), cx = w * (o.cx != null ? o.cx : 0.5), cy = h * (o.cy != null ? o.cy : 0.5);
+    const bond = 1 / (1 + Math.exp((R - 1.3) / 0.18));          // illustrative: shared cloud fades as the bond stretches
+    const hl = o.highlight || 0, half = R * a / 2;
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = "rgba(41,151,255," + (0.62 + 0.25 * hl).toFixed(2) + ")";
+    for (let i = 0; i < n; i++) {
+      const phi = this.ang[i] + time * 0.001 * this.spd[i], ox = Math.cos(phi) * this.rad[i], oy = Math.sin(phi) * this.rad[i];
+      let tx, ty; const x = this.xi[i];
+      if (x < bond) { tx = cx + ox * (1 + 0.9 * R) * a * 1.1; ty = cy + oy * 0.9 * a * 1.1; }
+      else if (x < bond + (1 - bond) / 2) { tx = cx - half + ox * a; ty = cy + oy * a; }
+      else { tx = cx + half + ox * a; ty = cy + oy * a; }
+      if (isNaN(this.px[i])) { this.px[i] = tx; this.py[i] = ty; }
+      this.px[i] += (tx - this.px[i]) * 0.14; this.py[i] += (ty - this.py[i]) * 0.14;
+      const s = this.sz[i]; ctx.fillRect(this.px[i], this.py[i], s, s);
+    }
+    ctx.globalCompositeOperation = "source-over";
+    for (const nx of [cx - half, cx + half]) {
+      const g = ctx.createRadialGradient(nx, cy, 0, nx, cy, 34 + 18 * hl);
+      g.addColorStop(0, "rgba(255,255,255,.95)"); g.addColorStop(0.18, "rgba(190,225,255,.55)"); g.addColorStop(1, "rgba(41,151,255,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(nx, cy, 34 + 18 * hl, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(nx, cy, 4.5, 0, 6.2832); ctx.fill();
+    }
+  }
+}
+
+/* ================= hero ================= */
+const heroEl = $("#hero"), heroCanvas = $("#heroCanvas");
+const heroMol = new Molecule(heroCanvas, matchMedia("(max-width: 700px)").matches ? 800 : 1500);
+let heroVisible = true, lastPointer = -1e9, pointerR = 0.74, heroR = 0.74;
+new IntersectionObserver(es => heroVisible = es[0].isIntersecting).observe(heroEl);
+heroEl.addEventListener("pointermove", e => {
+  const r = heroEl.getBoundingClientRect();
+  pointerR = 0.45 + clamp((e.clientX - r.left) / r.width, 0, 1) * 1.35; lastPointer = performance.now();
+  $("#heroHint").style.opacity = 0;
+});
+const heroOpts = { scale: (w, h) => Math.min(w * 0.26, h * 0.24, 220), cx: 0.5, cy: 0.77 };
+function heroFrame(t) {
+  if (heroVisible) {
+    const auto = 0.78 + 0.3 * Math.sin(t * 0.0006);
+    const target = (t - lastPointer < 2600) ? pointerR : auto;
+    heroR += (target - heroR) * 0.05;
+    heroMol.draw(heroR, t, Object.assign({ highlight: 0 }, heroOpts));
+  }
+  if (!REDUCE) requestAnimationFrame(heroFrame);
+}
+if (matchMedia("(hover: none)").matches) $("#heroHint").textContent = "Drag across the screen to stretch the bond";
+requestAnimationFrame(heroFrame);
+if (REDUCE) heroFrame(0);
+
+/* ================= statement word reveal ================= */
+const stmt = $("#stmt");
+stmt.innerHTML = stmt.textContent.trim().split(/\s+/).map(w => '<span class="w">' + w + "</span>").join(" ");
+const stmtWords = [...stmt.children];
+function stmtUpdate() {
+  const r = stmt.getBoundingClientRect(), vh = innerHeight;
+  const p = REDUCE ? 1 : clamp((vh * 0.88 - r.top) / (vh * 0.5 + r.height * 0.45), 0, 1);
+  const on = Math.round(p * stmtWords.length);
+  stmtWords.forEach((s, i) => s.classList.toggle("on", i < on));
+}
+
+/* ================= scale calculator ================= */
+const MOLS = [["H₂", 2], ["LiH", 6], ["Water", 7], ["Aspirin", 73], ["Caffeine", 80]];
+const UNITS = [["B", 0], ["KB", 3], ["MB", 6], ["GB", 9], ["TB", 12], ["PB", 15], ["EB", 18], ["ZB", 21], ["YB", 24]];
+const presets = $("#presets"), orb = $("#orb");
+MOLS.forEach(([name, o]) => {
+  const b = document.createElement("button"); b.type = "button"; b.textContent = name; b.dataset.o = o; b.setAttribute("aria-pressed", "false");
+  b.addEventListener("click", () => { orb.value = o; calc(o); });
+  presets.appendChild(b);
+});
+function calc(o) {
+  const n = 2 * o, lg = n * Math.log10(2), lm = lg + Math.log10(16);
+  $("#orbOut").textContent = o; $("#cQ").textContent = n;
+  [...presets.children].forEach(b => b.setAttribute("aria-pressed", +b.dataset.o === o));
+  $("#cD").textContent = n <= 52 ? Math.pow(2, n).toLocaleString("en-US") : Math.pow(10, lg - Math.floor(lg)).toFixed(1) + " × 10" + sup(Math.floor(lg));
+  let mem;
+  if (lm >= 24) mem = "≈ 10" + sup(Math.round(lm)) + " bytes";
+  else { let u = UNITS[0]; for (const x of UNITS) if (lm >= x[1]) u = x; const v = Math.pow(10, lm - u[1]); mem = v.toFixed(v >= 100 ? 0 : 1) + " " + u[0]; }
+  $("#cM").textContent = mem;
+  const ll = lm - Math.log10(1.6e10);
+  $("#cL").textContent = ll < 0 ? "less than one" : ll < 6 ? Math.round(Math.pow(10, ll)).toLocaleString("en-US") : "≈ 10" + sup(Math.round(ll));
+  $("#cFill").style.width = clamp(n / 80, 0.02, 1) * 100 + "%";
+  let v;
+  if (n <= 30) v = "Fits in an ordinary laptop's memory. Classical computers solve this exactly, which is why such molecules are used to test quantum methods.";
+  else if (n <= 45) v = "Needs a large cluster of computers. Still within reach of supercomputers.";
+  else if (n < 60) v = "At or beyond the memory of the largest supercomputers. Exact classical simulation is out of reach.";
+  else v = "Far beyond storing exactly on any classical machine. This is where quantum simulation gets interesting, but running it accurately needs hardware far better than exists today.";
+  $("#cV").textContent = v;
+}
+orb.addEventListener("input", () => calc(+orb.value));
+calc(2);
+
+/* ================= story: scroll driven bond ================= */
+const story = $("#story"), storyMol = new Molecule($("#storyCanvas"), matchMedia("(max-width: 700px)").matches ? 1000 : 1800);
+const sChart = $("#storyChart"), SW = 520, SH = 300, sm = { l: 52, r: 10, t: 10, b: 34 };
+const sLo = -1.2, sHi = -0.55, sX = r => sm.l + ((r - 0.3) / 2.2) * (SW - sm.l - sm.r), sY = v => sm.t + ((sHi - v) / (sHi - sLo)) * (SH - sm.t - sm.b);
+(function buildStoryChart() {
+  [-1.1, -1.0, -0.9, -0.8, -0.7, -0.6].forEach(v => { sChart.appendChild(el("line", { class: "grid", x1: sm.l, x2: SW - sm.r, y1: sY(v), y2: sY(v) })); sChart.appendChild(el("text", { x: sm.l - 6, y: sY(v) + 4, "text-anchor": "end" }, v.toFixed(1))); });
+  [0.5, 1.0, 1.5, 2.0, 2.5].forEach(r => sChart.appendChild(el("text", { x: sX(r), y: SH - sm.b + 16, "text-anchor": "middle" }, r.toFixed(1))));
+  sChart.appendChild(el("text", { x: (sm.l + SW - sm.r) / 2, y: SH - 2, "text-anchor": "middle" }, "H to H distance (Å)"));
+  sChart.appendChild(el("text", { x: 10, y: (SH - sm.b + sm.t) / 2, "text-anchor": "middle", transform: "rotate(-90 10 " + (SH - sm.b + sm.t) / 2 + ")" }, "Energy (Hartree)"));
+  const path = k => DATA.map((d, i) => (i ? "L" : "M") + sX(d.r).toFixed(1) + " " + sY(d[k]).toFixed(1)).join(" ");
+  sChart.appendChild(el("path", { d: path("hf"), fill: "none", stroke: "var(--orange)", "stroke-width": 2, "stroke-dasharray": "6 5" }));
+  sChart.appendChild(el("path", { d: path("fci"), fill: "none", stroke: "#fff", "stroke-width": 2.2 }));
+  DATA.forEach(d => sChart.appendChild(el("circle", { cx: sX(d.r), cy: sY(d.braket), r: 2.6, fill: "var(--blue)" })));
+  // real bond length marker
+  sChart.appendChild(el("line", { x1: sX(0.741), x2: sX(0.741), y1: sm.t, y2: SH - sm.b, stroke: "#86868b", "stroke-width": 1, "stroke-dasharray": "2 4" }));
+  sChart.appendChild(el("text", { x: sX(0.741) + 5, y: sm.t + 12 }, "measured bond, 0.74 Å"));
+})();
+const mkMarker = (id, color, r) => { const c = el("circle", { id, r, fill: color, stroke: "#000", "stroke-width": 2 }); sChart.appendChild(c); return c; };
+const vline = el("line", { y1: sm.t, y2: SH - sm.b, stroke: "#fff", "stroke-width": 1, opacity: 0.35 }); sChart.appendChild(vline);
+const mHF = mkMarker("mHF", "var(--orange)", 5), mEx = mkMarker("mEx", "#fff", 6.5);
+const CAPS = [
+  [0.6, "Squeezed", "Pushed this close, the two nuclei repel each other hard and the energy shoots up."],
+  [0.91, "Home", "Near 0.74 Å the energy bottoms out. That is the H₂ bond length measured in labs, and here it comes straight out of the equations."],
+  [1.5, "Stretching", "Pull the atoms apart and the bond weakens, so the energy climbs. Watch the orange line: the simple classical estimate starts to drift from the truth."],
+  [9, "Breaking", "The electrons are now splitting between two separate atoms. The simple method misses %M% mHa here, while a quantum circuit running VQE stays on the exact curve."]
+];
+let sTarget = 0, sShown = 0, sIdx = -1, sVisible = false, capKey = "";
+new IntersectionObserver(es => sVisible = es[0].isIntersecting, { rootMargin: "20% 0px" }).observe(story);
+function storyProgress() { const r = story.getBoundingClientRect(), tot = r.height - innerHeight; return clamp(-r.top / tot, 0, 1); }
+function storyFrame(t) {
+  if (sVisible) {
+    sTarget = storyProgress(); sShown = REDUCE ? sTarget : sShown + (sTarget - sShown) * 0.13;
+    const Rc = 0.3 + sShown * 2.2, idx = clamp(Math.round(sShown * (DATA.length - 1)), 0, DATA.length - 1), d = DATA[idx];
+    storyMol.draw(Rc, t, { scale: (w, h) => Math.min(w * 0.74 / 2.7, h * 0.34), cx: 0.5, cy: 0.56, highlight: clamp(1 - Math.abs(Rc - 0.74) / 0.12, 0, 1) });
+    if (idx !== sIdx) {
+      sIdx = idx;
+      $("#sR").textContent = d.r.toFixed(2);
+      const x = sX(d.r); mEx.setAttribute("cx", x); mEx.setAttribute("cy", sY(d.fci)); mHF.setAttribute("cx", x); mHF.setAttribute("cy", sY(d.hf));
+      vline.setAttribute("x1", x); vline.setAttribute("x2", x);
+      const miss = (d.hf - d.fci) * 1000;
+      $("#ssE").textContent = fmt4(d.fci) + " Ha"; $("#ssM").textContent = miss.toFixed(0) + " mHa";
+      const c = CAPS.find(c => d.r < c[0]);
+      const key = c[1] + (c[1] === "Breaking" ? Math.round(miss) : "");
+      if (key !== capKey) { capKey = key; $("#capT").textContent = c[1]; $("#capP").textContent = c[2].replace("%M%", miss.toFixed(0)); }
+    }
+  }
+  requestAnimationFrame(storyFrame);
+}
+requestAnimationFrame(storyFrame);
+
+/* ================= lab ================= */
+const byR = {}; DATA.forEach(d => byR[d.r.toFixed(2)] = d);
+const labR = $("#labR");
+let seed = 1, runToken = 0, shots = 0;
+const cur = () => byR[(+labR.value).toFixed(2)];
+$("#pWorst").textContent = sci(Math.max(...DATA.map(d => Math.abs(d.braket - d.fci))));
+
+function drawConv(row, trace, upto) {
+  const svg = $("#convChart"); svg.innerHTML = "";
+  const W = 640, H = 270, m = { l: 62, r: 12, t: 12, b: 36 }, all = trace.concat([row.fci, row.hf]);
+  let lo = Math.min(...all), hi = Math.max(...all); const pad = (hi - lo) * 0.08 || 0.01; lo -= pad; hi += pad;
+  const X = i => m.l + (i / 100) * (W - m.l - m.r), Y = v => m.t + ((hi - v) / (hi - lo)) * (H - m.t - m.b);
+  for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4; svg.appendChild(el("line", { class: "grid", x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v) })); svg.appendChild(el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, v.toFixed(3))); }
+  [0, 25, 50, 75, 100].forEach(i => svg.appendChild(el("text", { x: X(i), y: H - m.b + 16, "text-anchor": "middle" }, i)));
+  svg.appendChild(el("text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, "Optimizer iteration"));
+  svg.appendChild(el("line", { x1: m.l, x2: W - m.r, y1: Y(row.hf), y2: Y(row.hf), stroke: "var(--orange)", "stroke-width": 1.6, "stroke-dasharray": "2 4" }));
+  svg.appendChild(el("line", { x1: m.l, x2: W - m.r, y1: Y(row.fci), y2: Y(row.fci), stroke: "#fff", "stroke-width": 1.4, "stroke-dasharray": "6 4" }));
+  const pts = trace.slice(0, upto + 1);
+  if (pts.length > 1) svg.appendChild(el("path", { d: pts.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join(" "), fill: "none", stroke: "var(--blue)", "stroke-width": 2.4, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+}
+function setStats(row, run, noteText) {
+  $("#sExact").textContent = fmt(row.fci); $("#sHF").textContent = fmt(row.hf);
+  const corr = row.hf - row.fci; let v;
+  if (row.r < 0.6) v = "Compressed bond: the two nuclei repel each other strongly, so the total energy climbs steeply.";
+  else if (row.r <= 0.9) v = "Close to the most stable distance. The measured H₂ bond length is about 0.74 Å, and the energy here sits at or near the bottom of the curve.";
+  else if (row.r < 1.5) v = "Stretching: the bond is weakening and the energy rises toward the limit of two separate atoms. Hartree Fock already misses " + (corr * 1000).toFixed(0) + " mHa.";
+  else v = "Nearly broken bond: Hartree Fock misses " + (corr * 1000).toFixed(0) + " mHa here, because it cannot describe electrons that stay correlated as the bond breaks. This is where simple classical approximations struggle most.";
+  $("#sVerdict").textContent = v;
+  if (!run) { $("#sVQE").textContent = "–"; $("#sErr").textContent = "–"; $("#sNote").textContent = ""; return; }
+  $("#sVQE").textContent = fmt(run.measured); $("#sErr").textContent = sci(Math.abs(run.measured - row.fci)) + " Ha";
+  const rec = (row.hf - run.trueE) / corr * 100;
+  $("#sNote").textContent = noteText.replace("%REC%", rec.toFixed(rec > 99.99 ? 3 : 1));
+}
+function runLab() {
+  const row = cur(), tok = ++runToken, run = runVQE(row, { shots, seed });
+  const note = shots === 0
+    ? "Ideal measurement, random start " + seed + ". The circuit recovered %REC%% of the correlation energy that Hartree Fock misses."
+    : shots + " shots per term, random start " + seed + ". Measured energy is noisy, so it can land above or below the exact value. The circuit's noise free energy is " + fmt(run.trueE) + " Ha, recovering %REC%% of the missing correlation energy.";
+  if (REDUCE) { drawConv(row, run.trace, run.trace.length); setStats(row, run, note); return; }
+  setStats(row, null, ""); $("#sNote").textContent = "Optimizing…";
+  let i = 0;
+  const step = () => { if (tok !== runToken) return; i = Math.min(run.trace.length - 1, i + 2); drawConv(row, run.trace, i); if (i < run.trace.length - 1) requestAnimationFrame(step); else setStats(row, run, note); };
+  step();
+}
+labR.addEventListener("input", () => { $("#labROut").textContent = (+labR.value).toFixed(2); runToken++; const row = cur(); drawConv(row, [row.hf], 0); setStats(row, null, ""); });
+labR.addEventListener("change", runLab);
+$("#run").addEventListener("click", runLab);
+$("#reseed").addEventListener("click", () => { seed++; runLab(); });
+$("#shotSeg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; shots = +b.dataset.shots; [...$("#shotSeg").children].forEach(x => x.setAttribute("aria-pressed", x === b)); runLab(); });
+let labStarted = false;
+new IntersectionObserver(es => { if (es[0].isIntersecting && !labStarted) { labStarted = true; runLab(); } }, { threshold: 0.25 }).observe($("#convChart"));
+{ const row = cur(); drawConv(row, [row.hf], 0); setStats(row, null, ""); }
+
+/* ================= landscape ================= */
+const meter = (lvl, label) => '<div class="meter" aria-label="Maturity: ' + label + '">' + [1, 2, 3, 4].map(n => '<i class="' + (n <= lvl ? "on" : "") + '"></i>').join("") + "<span>" + label + "</span></div>";
+const STAGES = [
+  ["Target identification", "Which protein to hit", "Biologists find the protein or pathway involved in a disease. Genomics and machine learning do most of the work here. Quantum machine learning on genomic data is being explored, but only in small simulated studies.", 2, "Early research"],
+  ["Hit discovery", "Find candidate molecules", "Huge libraries of molecules are screened for any that bind the target. Machine learning screening is already routine. Quantum methods are being studied for scoring molecules more accurately.", 2, "Early research"],
+  ["Lead optimization", "Improve the best ones", "Candidates are tuned for how strongly and selectively they bind. This needs accurate molecular energies, which is what VQE style methods try to compute. It is where quantum chemistry has the clearest case, but only small molecules have been simulated so far.", 3, "Most promising for quantum"],
+  ["Preclinical", "Lab and animal tests", "Experiments on cells and animals check safety and effect. Computation supports the work, but quantum computing has no direct role here.", 0, "No direct role"],
+  ["Clinical trials", "Tests on people", "Usually the longest and costliest stage. It is limited by how many patients are needed and how long outcomes take to observe, so a faster computer does not shorten it. Some studies look at quantum optimization for trial design and site selection, at an early stage.", 1, "Mostly out of reach"]
+];
+const pipe = $("#pipe"), pipeOut = $("#pipeOut");
+function pickStage(i) {
+  [...pipe.children].forEach((b, j) => b.setAttribute("aria-pressed", j === i));
+  const s = STAGES[i]; pipeOut.innerHTML = "<h3>" + s[0] + "</h3><p>" + s[2] + "</p>" + meter(s[3], s[4]);
+}
+STAGES.forEach((s, i) => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-pressed", "false"); b.innerHTML = s[0] + "<small>" + s[1] + "</small>"; b.addEventListener("click", () => pickStage(i)); pipe.appendChild(b); });
+pickStage(2);
+
+const APPS = [
+  ["Drug discovery and molecular simulation", ["A molecule's behavior comes from its electrons, and classical simulation cost grows exponentially with their number. Quantum computers can represent that state naturally.", "VQE estimates a molecule's lowest energy, which feeds predictions of stability, reaction energy and drug binding. Published demonstrations cover very small molecules such as H₂, LiH and BeH₂."], 3, "Most developed"],
+  ["Protein folding", ["Folding can be framed as finding the lowest energy shape of a chain, an optimization problem with a huge number of possible shapes.", "Quantum annealing, QAOA and quantum walks have been tried on simplified lattice models of short peptides. Real proteins need far more qubits than exist, and transformer models like AlphaFold 2 are far ahead in practice."], 2, "Early research"],
+  ["Genomics and quantum ML", ["Work includes DNA sequence assembly and alignment as optimization problems, and quantum neural networks for classifying gene expression and multi omics data.", "Most studies run on simulators with small datasets, and a clear advantage over classical machine learning has not been established."], 2, "Early research"],
+  ["Medical imaging", ["Hybrid quantum classical networks have been tested on tumor classification, retinal disease and chest imaging, usually on small public datasets with downsized images.", "Results are often comparable to classical models rather than better, and some studies are quantum inspired rather than run on a quantum device."], 1, "Mostly proof of concept"],
+  ["Diagnostics and treatment", ["Radiotherapy dose planning and scheduling are combinatorial problems, a natural target for QAOA and annealing. Quantum models are also tested for risk prediction from clinical data.", "The work is simulation based, and none of it has reached clinical deployment."], 2, "Early research"]
+];
+$("#rail").innerHTML = APPS.map(a => "<article><h3>" + a[0] + "</h3>" + a[1].map(p => "<p>" + p + "</p>").join("") + meter(a[2], a[3]) + "</article>").join("");
+$("#prev").addEventListener("click", () => $("#rail").scrollBy({ left: -380, behavior: "smooth" }));
+$("#next").addEventListener("click", () => $("#rail").scrollBy({ left: 380, behavior: "smooth" }));
+
+const CMP = {
+  Transformers: [["What it is", "A neural network architecture running on classical hardware"], ["How it works", "Learns patterns from data using attention"], ["Needs data", "Yes, a lot"], ["In biology today", "In real use. AlphaFold 2 changed protein structure prediction"], ["Best at", "Fast prediction and screening at scale"]],
+  Quantum: [["What it is", "A different model of computation and hardware"], ["How it works", "Encodes physical problems, such as molecular states, in qubits"], ["Needs data", "Simulation needs equations, not training data"], ["In biology today", "Research stage, small demonstrations"], ["Best at", "Accurate energies where data is scarce"]],
+  Together: null
+};
+const cmpSeg = $("#cmpSeg"), cmpBody = $("#cmpBody");
+function pickCmp(k) {
+  [...cmpSeg.children].forEach(b => b.setAttribute("aria-pressed", b.textContent === k));
+  cmpBody.innerHTML = CMP[k]
+    ? '<div class="cmprows">' + CMP[k].map(r => '<div class="cmprow"><b>' + r[0] + "</b><span>" + r[1] + "</span></div>").join("") + "</div>"
+    : '<p class="cmptext">Hybrid work exists, including quantum transformer models for molecular and gene network tasks. <em>It is early, and mostly tested on simulators. Even VQE pairs a quantum circuit with a classical optimizer.</em></p>';
+}
+Object.keys(CMP).forEach(k => { const b = document.createElement("button"); b.type = "button"; b.textContent = k; b.addEventListener("click", () => pickCmp(k)); cmpSeg.appendChild(b); });
+pickCmp("Transformers");
+
+/* ================= global scroll hooks + resize ================= */
+let ticking = false;
+addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { stmtUpdate(); ticking = false; }); } }, { passive: true });
+addEventListener("resize", () => { heroMol.resize(); storyMol.resize(); stmtUpdate(); });
+stmtUpdate();
+</script>
+</body>
+</html>
