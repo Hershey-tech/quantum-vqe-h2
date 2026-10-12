@@ -1,4 +1,5 @@
 # VQE for the H2 molecule on Amazon Braket
+   **Live demo:** https://hershey-tech.github.io/quantum-vqe-h2/
 
 A variational quantum eigensolver (VQE) that computes the ground state energy of the hydrogen molecule at 22 bond lengths and compares it with exact classical results. Built as part of a literature review project on quantum computing in biomedical research.
 
